@@ -1,3 +1,6 @@
+import pandas as pd
+
+
 def get_unique_values(df) -> list:
     """
     Helps to understand how many unique values each categorical columm has
@@ -13,12 +16,6 @@ def get_unique_values(df) -> list:
 
 
 def mostly_correlated(column, df):
-    # df_all_corr = df.corr().abs().unstack().sort_values(kind="quicksort", ascending=False).reset_index()
-    # df_all_corr.rename(columns={"level_0": "Feature 1",
-    #                             "level_1": "Feature 2",
-    #                             0: 'Correlation Coefficient'},
-    #                    inplace=True)
-    # return df_all_corr[df_all_corr['Feature 1'] == column]
     return df.corrwith(df[column]).sort_values(ascending=False)
 
 
