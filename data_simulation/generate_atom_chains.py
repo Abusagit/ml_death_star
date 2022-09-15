@@ -4,6 +4,7 @@ from pathlib import Path
 from tqdm import tqdm
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.express as px
 
 np.seterr(all = "raise") 
 
@@ -14,7 +15,8 @@ def get_parser():
     parser.add_argument("-n", "--number", default=10, help="# of samples to generate", type=int)
     parser.add_argument("-p", "--points", default=100, help="# points per sample", type=int)
     
-    parser.add_argument("--min_max_radius", nargs=2, type=int, default=[1, 5])
+    parser.add_argument("--mode", choices=["distance", "energy"], default="energy")
+    parser.add_argument("--radius", type=int, default=5)
     
     parser.add_argument("-o", "--out", type=Path, default=Path.cwd())
 
@@ -25,17 +27,19 @@ def plot_chain(coordinates, charges, outdir:Path):
     coord = pd.DataFrame(coordinates, columns=["X", "Y", "Z"])
     charge = pd.DataFrame(charges, columns=["Charge"])
     df = pd.concat([coord, charge], axis=1)
+    df["Number"] = list((range(charges.shape[0])))[::-1]
     
     fig = go.Figure(data=go.Scatter3d(
             x=df["X"], y=df["Y"], z=df["Z"],
             marker=dict(
                 size=4,
-                color=df["Charge"],
-                # colorscale='Viridis',
+                color=df["Number"],
+                colorscale='Plasma',
+                opacity=0.9,
             ),
             line=dict(
-                color='darkblue',
-                width=2
+                color='rgb(189,189,189)',
+                width=1,
             )
         ))
     
@@ -59,11 +63,17 @@ def plot_chain(coordinates, charges, outdir:Path):
                 aspectratio = dict( x=1, y=1, z=0.7 ),
                 aspectmode = 'manual'
             ),
+            showlegend=True
         )
             
     outname = str(outdir / "typical_chain.html")
     print(f"Plotting typical chain and saving to {outname}")
     fig.write_html(outname)
+    
+    
+def plot_histogram(labels):
+    fig = px.histogram(labels, )
+    pass
 
 def generate_point_in_sphere_with_shift(origin, radius):
 
@@ -86,17 +96,18 @@ def compute_charge_energy_between_two_points(xyz_1, xyz_2, charge_1, charge_2):
     distance_vector = xyz_1 - xyz_2
     #/////print(distance_vector)
     return round(charge_1 * charge_2 / np.sqrt(distance_vector @ distance_vector), 4)
-
+ 
         
-def create_synthetic_chain(points, min_radius, max_radius):
+def create_synthetic_chain(points, radius):
     
-    interdot_radius = np.random.uniform(low=min_radius, high=max_radius, size=points-1)
+    #interdot_radius = np.random.exponential(scale=5, size=points-1) + min_radius # lambda = 1/2, shifted distribution
+    #interdot_radius = np.random.uniform(low=min_radius, high=max_radius, size=points-1)
     
     coordinates = [np.zeros(3)]
     
     for loop in range(points - 1):
         
-        while sum(xyz := generate_point_in_sphere_with_shift(origin=coordinates[-1], radius=interdot_radius[loop]) - coordinates[-1]) == 0:
+        while sum(xyz := generate_point_in_sphere_with_shift(origin=coordinates[-1], radius=radius) - coordinates[-1]) == 0:
             continue
         
         coordinates.append(xyz)
@@ -111,7 +122,7 @@ def create_synthetic_chain(points, min_radius, max_radius):
     return coordinates, charges
 
 
-def parameterize_chain(coordinates, charges):
+def parameterize_chain(coordinates, charges, mode):
     interatom_energies = np.zeros(shape=(coordinates.shape[0], coordinates.shape[0]))
     
     for i, coord_i in enumerate(coordinates):
@@ -131,15 +142,21 @@ def parameterize_chain(coordinates, charges):
     
     potential_electrostatic_energy = interatom_energies[upper_triangular_indices].sum()
     
-    return interatom_energies, potential_electrostatic_energy
-
+    if mode =="energy":
+        return interatom_energies, potential_electrostatic_energy
+    
+    distance_matrix = np.zeros(shape=(coordinates.shape[0], coordinates.shape[0]))
+    # TODO
+    
+    
+    
 def main():
     parser = get_parser()
     args = parser.parse_args()
     
     
-    min_radius, max_radius = args.min_max_radius
-    outdir = args.out / f"chains_min_radius_{min_radius}_max_radius_{max_radius}_size_{args.number}" / "raw"
+    radius = args.radius
+    outdir = args.out / f"chains_mode_{args.mode}_radius_{radius}_size_{args.number}" / "raw"
     
     outdir.mkdir(parents=True, exist_ok=False)
     
@@ -148,8 +165,9 @@ def main():
     for i in tqdm(range(1, args.number+1), desc="Parameterizing atom chains and saving to matrix_coordinates_files"):
         
         interatom_energies, total_energy = parameterize_chain(*create_synthetic_chain(points=args.points,
-                                                                                      min_radius=min_radius,
-                                                                                      max_radius=max_radius))
+                                                                                      radius=radius,
+                                                                                      ),
+                                                              mode=args.mode)
         
         energies.append(total_energy)
         
@@ -161,7 +179,7 @@ def main():
         np.save(f, np.array(energies))
     
 
-    coord, charges = create_synthetic_chain(points=args.points, min_radius=min_radius, max_radius=max_radius)
+    coord, charges = create_synthetic_chain(points=args.points, radius=radius)
     plot_chain(coordinates=coord, charges=charges, outdir=outdir)
     
     

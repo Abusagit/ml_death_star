@@ -7,6 +7,7 @@ import torch
 from torch_geometric.data import DataLoader as DataloaderGeometric
 from torch_geometric.data import Dataset as DatasetGeometric
 from torch_geometric.data import Data as DataGeometric
+from torch.utils.data import Dataset, DataLoader, random_split
 
 from tqdm import tqdm
 
@@ -30,6 +31,24 @@ def get_train_test_dataloaders_geometric(pyg_data, ratio=0.8, random_state=42, b
     test_dataloader = DataloaderGeometric(test_set, batch_size=batch_size, shuffle=True)
     
     return train_dataloader, test_dataloader
+
+def get_train_test_dataloaders(torch_data, ratio=0.8, random_state=42, batch_size=2):
+    torch.manual_seed(random_state)
+    
+    train_num = int(len(torch_data) * ratio)
+    test_num = len(torch_data) - train_num
+    
+    print(f"# of training graphs: {train_num}\n# of test graphs: {test_num}")
+    
+    trainset, testset = random_split(torch_data, [train_num, test_num])
+    
+    
+    train_dataloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=2)
+    test_dataloader = DataLoader(testset, batch_size=batch_size, shuffle=True, num_workers=2)
+    
+    return train_dataloader, test_dataloader
+
+
 
 def test(test_loader, model, device, is_validation=False):
     

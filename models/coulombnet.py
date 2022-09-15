@@ -11,8 +11,6 @@ import torch_geometric.nn as pyg_nn
 import plotly.express as px
 import numpy as np
 
-import sys
-
 class CoulombNet(nn.Module):
     def __init__(self, input_dim, hidden_dim, edge_dim):
         super(CoulombNet, self).__init__()
