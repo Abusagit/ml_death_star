@@ -13,7 +13,7 @@ def get_parser():
     parser.add_argument("--one_hot_charges", "--one_hot", action="store_true", required=False, 
                         help="If given, charges will be represented as 0/1 encoding, indicating 0 as NEGATIVE charge and 1 as POSITIVE")
     
-    parser.add_argument("--range", nargs=2, type=int, default=)
+    #parser.add_argument("--range", nargs=2, type=int, default=asdasd)
     
     parser.add_argument("-o", "--out", default=Path(Path.cwd()))
 
