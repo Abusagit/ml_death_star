@@ -4,8 +4,7 @@ import torch
 import pandas as pd
 import numpy as np
 from torch.utils.data import Dataset
-import argparse
-
+from torchvision import transforms
 
 # Ignore warnings
 #import warnings
@@ -36,11 +35,11 @@ class ChainDataset(Dataset):
         sample_y = self.y[idx]
         
         with open(mol_path, "rb") as f:
-            sample = torch.tensor(np.load(f)).reshape(self.data_dim)
+            sample = torch.tensor(np.load(f), dtype=torch.float64).reshape(self.data_dim)
         
         
         if self.transform:
-            sample = self.transform(sample_y)
+            sample = self.transform(sample)
             
         
         return sample, sample_y
@@ -49,9 +48,6 @@ class ChainDataset(Dataset):
 class ToTensor:
     """Convert ndarrays in sample to Tensors."""
     
-    def __init__(self, in_channels=1) -> None:
-        self.in_channels = in_channels
-    
     def __call__(self, sample):
         
         
@@ -59,4 +55,9 @@ class ToTensor:
         
         # Returns: Channels x Height x Width
         
-        return sample.view(self.in_channels, *sample.shape)
+        return sample.view(1, *sample.shape)
+    
+    
+transform=transforms.Compose([ToTensor(),
+                              #Normalize(),
+                              ])

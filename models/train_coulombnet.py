@@ -13,7 +13,7 @@ import sys
 import os
 
 from coulombnet import CoulombNet
-from ml_death_star.torch_utils import get_train_test_dataloaders_geometric, train
+from ml_death_star.torch_utils import get_train_test_dataloaders_geometric, train_geometric
 from ml_death_star.torch_custom_datasets.spheres_dataset import SpheresDataset
 
 # from torch_geometric.data import DataLoader as DataloaderGeometric
@@ -88,7 +88,7 @@ logger.info(f"Cuda available: {torch.cuda.is_available()=}")
 optimizer = torch.optim.Adam
 optimizer_params = {"lr": 0.01}
 torch.cuda.empty_cache()
-model, train_losses, test_losses = train(model=CoulombNet(input_dim=node_input_dimension, hidden_dim=args.hidden_dim, edge_dim=edge_input_dimension),
+model, train_losses, test_losses = train_geometric(model=CoulombNet(input_dim=node_input_dimension, hidden_dim=args.hidden_dim, edge_dim=edge_input_dimension),
                                         optimizer=optimizer,
                                         optimizer_params=optimizer_params,
                                         log=open(os.devnull,"w"),

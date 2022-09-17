@@ -9,8 +9,8 @@ import sys
 import os
 
 from chain_atom_model import ChainCNN
-from ml_death_star.torch_utils import get_train_test_dataloaders, train
-from ml_death_star.torch_custom_datasets.atom_chains_dataset import ChainDataset, ToTensor
+from ml_death_star.torch_utils import get_train_test_dataloaders, train_cnn
+from ml_death_star.torch_custom_datasets.atom_chains_dataset import ChainDataset, transform
 
 from pathlib import Path
 
@@ -63,7 +63,7 @@ logger.info(f"Initialising dataset at {args.dataroot}")
 
 dataset = ChainDataset(path=args.dataroot, 
                        input_dim=args.input_dim,
-                       transform=ToTensor)
+                       transform=transform)
 
 train_dl, test_dl = get_train_test_dataloaders(dataset, 
                                                ratio=args.train_test_ratio,
@@ -79,7 +79,7 @@ logger.info(f"Cuda available: {torch.cuda.is_available()=}")
 optimizer = torch.optim.Adam
 optimizer_params = {"lr": 0.01}
 torch.cuda.empty_cache()
-model, train_losses, test_losses = train(model=ChainCNN(input_dim=args.input_dim, hidden_dim=args.hidden_dim),
+model, train_losses, test_losses = train_cnn(model=ChainCNN(input_dim=args.input_dim, hidden_dim=args.hidden_dim),
                                         optimizer=optimizer,
                                         optimizer_params=optimizer_params,
                                         log=open(os.devnull,"w"),
