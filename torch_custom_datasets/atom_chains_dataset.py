@@ -12,16 +12,9 @@ import argparse
 #warnings.filterwarnings("raise")
 
 
-
-def get_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--root_dir")    
-    
-    return parser
-
 class ChainDataset(Dataset):
     
-    def __init__(self, path, transform=None):
+    def __init__(self, path, input_dim=100, transform=None):
         self.path = path
         self.transform = transform
 
@@ -30,7 +23,7 @@ class ChainDataset(Dataset):
             self.y = torch.tensor(np.load(file), dtype=torch.float64).reshape(-1)
             
         self.data_paths = self._get_x_paths()
-        self.data_dim = (len(self.data_paths), len(self.data_paths))
+        self.data_dim = (input_dim, input_dim)
 
     def _get_x_paths(self):
         return [os.path.join(self.path, f"X_{i}.npy") for i in range(1, self.y.shape[0])]

@@ -22,6 +22,7 @@ def get_parser():
     root.add_argument("--train_test_ratio", type=float, default=0.8)
     root.add_argument("--batch_size", type=int, default=40)
     root.add_argument("--hidden_dim", type=int, default=10)
+    root.add_argument("--input_dim", type=int, default=100)
     root.add_argument("--epochs", default=200, type=int)
     root.add_argument("-o", "--outdir", default=os.getcwd())
     
@@ -61,6 +62,7 @@ logger.info(f"Initialising dataset at {args.dataroot}")
 
 
 dataset = ChainDataset(path=args.dataroot, 
+                       input_dim=args.input_dim,
                        transform=ToTensor)
 
 train_dl, test_dl = get_train_test_dataloaders(dataset, 
@@ -77,7 +79,7 @@ logger.info(f"Cuda available: {torch.cuda.is_available()=}")
 optimizer = torch.optim.Adam
 optimizer_params = {"lr": 0.01}
 torch.cuda.empty_cache()
-model, train_losses, test_losses = train(model=ChainCNN(input_dim=100, hidden_dim=args.hidden_dim),
+model, train_losses, test_losses = train(model=ChainCNN(input_dim=args.input_dim, hidden_dim=args.hidden_dim),
                                         optimizer=optimizer,
                                         optimizer_params=optimizer_params,
                                         log=open(os.devnull,"w"),
