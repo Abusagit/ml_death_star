@@ -1,11 +1,10 @@
 from pathlib import Path
+import os
 import torch
 import pandas as pd
 import numpy as np
-from torch.utils.data import Dataset, DataLoader
-from tqdm import tqdm
+from torch.utils.data import Dataset
 import argparse
-import glob
 
 
 # Ignore warnings
@@ -16,31 +15,31 @@ import glob
 
 def get_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--root_dir", type=Path)    
+    parser.add_argument("-r", "--root_dir")    
     
     return parser
 
 class ChainDataset(Dataset):
     
-    def __init__(self, path: Path, transform=None):
+    def __init__(self, path, transform=None):
         self.path = path
         self.transform = transform
 
         
-        with open(self.path / "Y.npy", "rb") as file:
+        with open(os.path.join(self.path, "Y.npy"), "rb") as file:
             self.y = torch.tensor(np.load(file), dtype=torch.float64).reshape(-1)
             
         self.data_paths = self._get_x_paths()
         self.data_dim = (len(self.data_paths), len(self.data_paths))
 
     def _get_x_paths(self):
-        return [self.path / f"X_{i}" for i in range(1, self.y.shape[0])]
+        return [os.path.join(self.path, f"X_{i}.npy") for i in range(1, self.y.shape[0])]
     
     def __len__(self):
         return len(self.data_paths)
     
     def __getitem__(self, idx):
-        mol_path = self.path[idx]
+        mol_path = self.data_paths[idx]
         sample_y = self.y[idx]
         
         with open(mol_path, "rb") as f:

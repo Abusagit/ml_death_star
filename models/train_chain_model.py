@@ -1,10 +1,6 @@
 import torch
-# import torch.nn as nn
-# import torch.nn.functional as F
-# import torch_geometric.nn as pyg_nn
 import plotly.express as px
 import pickle
-# import numpy as np
 
 import argparse
 import logging
@@ -16,10 +12,6 @@ from chain_atom_model import ChainCNN
 from ml_death_star.torch_utils import get_train_test_dataloaders, train
 from ml_death_star.torch_custom_datasets.atom_chains_dataset import ChainDataset, ToTensor
 
-# from torch_geometric.data import DataLoader as DataloaderGeometric
-# from torch_geometric.data import Dataset as DatasetGeometric
-
-# from tqdm import tqdm
 from pathlib import Path
 
 
@@ -31,7 +23,7 @@ def get_parser():
     root.add_argument("--batch_size", type=int, default=40)
     root.add_argument("--hidden_dim", type=int, default=10)
     root.add_argument("--epochs", default=200, type=int)
-    root.add_argument("-o", "--outdir", default=Path.cwd())
+    root.add_argument("-o", "--outdir", default=os.getcwd())
     
     return root
 
@@ -96,8 +88,8 @@ model, train_losses, test_losses = train(model=ChainCNN(input_dim=100, hidden_di
 
 torch.save(model.state_dict(), args.outdir / "params.pkl")
 
-with open(Path(args.outdir) / "train.pkl", "wb") as h:
+with open(Path(args.outdir, "train.pkl"), "wb") as h:
     pickle.dump(train_losses, h, protocol=pickle.HIGHEST_PROTOCOL)
     
-with open(Path(args.outdir) / "test.pkl", "wb") as h:
+with open(Path(args.outdir, "test.pkl"), "wb") as h:
     pickle.dump(test_losses, h, protocol=pickle.HIGHEST_PROTOCOL)
