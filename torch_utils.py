@@ -5,9 +5,7 @@ import logging
 
 import torch
 from torch_geometric.data import DataLoader as DataloaderGeometric
-from torch_geometric.data import Dataset as DatasetGeometric
-from torch_geometric.data import Data as DataGeometric
-from torch.utils.data import Dataset, DataLoader, random_split
+from torch.utils.data import DataLoader, random_split
 
 from tqdm import tqdm
 
@@ -77,7 +75,6 @@ def train_geometric(model, optimizer, train_loader, test_loader, optimizer_param
     test_losses = []
     with tqdm(total=num_of_epochs, file=log) as pbar:
         
-        # logger.info(f"Started logging to {log}")
         pbar.set_description("Performing training procedure:")
     
         for epoch in range(1, num_of_epochs + 1):
@@ -110,7 +107,6 @@ def train_geometric(model, optimizer, train_loader, test_loader, optimizer_param
                 test_losses.append(test_loss)
                 logger.info(f"Epoch {epoch} | Train loss: {train_loss:.4f} | Test loss : {test_loss:.4f}")
                 
-                # pbar.write(f"Epoch {epoch} | Train loss: {train_loss:.4f} | Test loss : {test_loss:.4f}")
             
             epoch_loss = np.mean(epoch_losses)
             train_losses.append(epoch_loss)
@@ -149,7 +145,6 @@ def train_cnn(model, optimizer, train_loader, test_loader, optimizer_params, num
     test_losses = []
     with tqdm(total=num_of_epochs, file=log) as pbar:
         
-        # logger.info(f"Started logging to {log}")
         pbar.set_description("Performing training procedure:")
     
         for epoch in range(1, num_of_epochs + 1):

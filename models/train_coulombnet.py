@@ -1,10 +1,6 @@
 import torch
-# import torch.nn as nn
-# import torch.nn.functional as F
-# import torch_geometric.nn as pyg_nn
 import plotly.express as px
 import pickle
-# import numpy as np
 
 import argparse
 import logging
@@ -16,10 +12,6 @@ from coulombnet import CoulombNet
 from ml_death_star.torch_utils import get_train_test_dataloaders_geometric, train_geometric
 from ml_death_star.torch_custom_datasets.spheres_dataset import SpheresDataset
 
-# from torch_geometric.data import DataLoader as DataloaderGeometric
-# from torch_geometric.data import Dataset as DatasetGeometric
-
-# from tqdm import tqdm
 from pathlib import Path
 
 
