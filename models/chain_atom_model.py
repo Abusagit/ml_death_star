@@ -40,7 +40,7 @@ class ChainCNN(nn.Module):
     def forward(self, x):
         z = self.model(x)
         
-        return z.flatten()
+        return z
     
     def loss(self, pred, target):
         loss = nn.MSELoss()

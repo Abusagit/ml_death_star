@@ -19,20 +19,20 @@ class ChainDataset(Dataset):
 
         
         with open(os.path.join(self.path, "Y.npy"), "rb") as file:
-            self.y = torch.tensor(np.load(file), dtype=torch.float64).reshape(-1)
+            self.y = torch.tensor(np.load(file), dtype=torch.float64).reshape(1, -1, 1)
             
         self.data_paths = self._get_x_paths()
         self.data_dim = (input_dim, input_dim)
 
     def _get_x_paths(self):
-        return [os.path.join(self.path, f"X_{i}.npy") for i in range(1, self.y.shape[0])]
+        return [os.path.join(self.path, f"X_{i}.npy") for i in range(1, self.y.shape[1])]
     
     def __len__(self):
         return len(self.data_paths)
     
     def __getitem__(self, idx):
         mol_path = self.data_paths[idx]
-        sample_y = self.y[idx]
+        sample_y = self.y[0, idx]
         
         with open(mol_path, "rb") as f:
             sample = torch.tensor(np.load(f), dtype=torch.float64).reshape(self.data_dim)
