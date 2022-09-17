@@ -97,10 +97,10 @@ model, train_losses, test_losses = train_geometric(model=CoulombNet(input_dim=no
                                         test_loader=test_dl,
                                         )
 
-torch.save(model.state_dict(), args.outdir / "params.pkl")
+torch.save(model.state_dict(), Path(args.outdir, "params.pkl"))
 
-with open(Path(args.outdir) / "train.pkl", "wb") as h:
+with open(Path(args.outdir, "train.pkl"), "wb") as h:
     pickle.dump(train_losses, h, protocol=pickle.HIGHEST_PROTOCOL)
     
-with open(Path(args.outdir) / "test.pkl", "wb") as h:
+with open(Path(args.outdir, "test.pkl"), "wb") as h:
     pickle.dump(test_losses, h, protocol=pickle.HIGHEST_PROTOCOL)
