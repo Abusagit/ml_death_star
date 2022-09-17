@@ -174,7 +174,7 @@ def train_cnn(model, optimizer, train_loader, test_loader, optimizer_params, num
                 
                 logger.debug(f"Epoch {epoch} | batch {i} loss: {train_loss:.4f}")
                 
-                del batch
+                del X, targets
                 torch.cuda.empty_cache()
             if epoch % epoch_interval == 0:
                 test_loss = test_cnn(test_loader, model, device=device)

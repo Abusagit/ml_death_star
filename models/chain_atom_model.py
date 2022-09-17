@@ -26,12 +26,12 @@ class ChainCNN(nn.Module):
             nn.Conv2d(in_channels=self.out_channels[0], out_channels=self.out_channels[1], kernel_size=5, padding=2), # 49 ->  49 * out_channels[1]
             nn.MaxPool2d(kernel_size=7), # 49 -> 7 * out_channels[1]
             nn.Conv2d(in_channels=self.out_channels[1], out_channels=self.out_channels[2], kernel_size=3), #  7 -> 5 * out_channels[2]
-            nn.Flatten(), # -> 5 * out_channels[2] (5 * 15)
-            nn.Linear(5 * self.out_channels[2], 128),
+            nn.Flatten(), # -> 5 * 5 * out_channels[2] (5 * 5 * 15 = 375)
+            nn.Linear(5 * 5 * self.out_channels[2], 128), 
             nn.ReLU(),
             nn.Dropout(self.p),
             nn.Linear(128, 32),
-            nn.ReLU(),
+            nn.ReLU(), 
             nn.Dropout(self.p / 5),
             nn.Linear(32, 1),
         )
