@@ -40,7 +40,6 @@ class ChainDataset(Dataset):
         
         if self.transform:
             sample = self.transform(sample)
-            
         
         return sample, sample_y
 

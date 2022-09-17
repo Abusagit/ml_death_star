@@ -125,8 +125,8 @@ def test_cnn(test_loader, model, device, is_validation=False):
     LOSS = []
     torch.cuda.empty_cache()
     for (X, targets) in test_loader:
-        X = X.to(device)
-        targets = targets.to(device)
+        X = X.to(device).float()
+        targets = targets.to(device).float()
         
         predictions = model(X)
         
@@ -159,10 +159,9 @@ def train_cnn(model, optimizer, train_loader, test_loader, optimizer_params, num
 
             for i, (X, targets) in enumerate(train_loader):
 
-                X, targets = X.to(device), targets.to(device)
+                X, targets = X.to(device).float(), targets.to(device).float()
                 
                 optimizer.zero_grad()
-                
                 
                 predictions = model(X)
                 
