@@ -9,7 +9,7 @@ import numpy as np
 
 class ChainCNN(nn.Module):
     def __init__(self, input_dim=100, in_channels=1, hidden_dim=32, out_channels=None, dropout=0.25) -> None:
-        self.out_channels = out_channels or [5, 10, 15]
+        self.out_channels = out_channels or [10, 10, 15]
         self.input_dim = input_dim
         self.in_channels = in_channels
         self.hidden_dim = hidden_dim
@@ -21,13 +21,13 @@ class ChainCNN(nn.Module):
         
         
         self.model = nn.Sequential(
-            nn.Conv2d(in_channels=self.in_channels, out_channels=self.out_channels[0], kernel_size=7, padding=2), # In=100, Out=98 * out_channels[0]
-            nn.MaxPool2d(kernel_size=2), # 98 -> 49 * out_channels[0]
-            nn.Conv2d(in_channels=self.out_channels[0], out_channels=self.out_channels[1], kernel_size=5, padding=2), # 49 ->  49 * out_channels[1]
-            nn.MaxPool2d(kernel_size=7), # 49 -> 7 * out_channels[1]
-            nn.Conv2d(in_channels=self.out_channels[1], out_channels=self.out_channels[2], kernel_size=3), #  7 -> 5 * out_channels[2]
-            nn.Flatten(), # -> 5 * 5 * out_channels[2] (5 * 5 * 15 = 375)
-            nn.Linear(5 * 5 * self.out_channels[2], 128), 
+            nn.Conv2d(in_channels=self.in_channels, out_channels=self.out_channels[0], kernel_size=7), # In=100, Out=94 * out_channels[0]
+            nn.AvgPool2d(kernel_size=2), # 94 -> 47 * out_channels[0]
+            nn.Conv2d(in_channels=self.out_channels[0], out_channels=self.out_channels[1], kernel_size=5, padding=1), # 47 ->  45 * out_channels[1]
+            nn.AvgPool2d(kernel_size=5), # 45 -> 9 * out_channels[1]
+            nn.Conv2d(in_channels=self.out_channels[1], out_channels=self.out_channels[2], kernel_size=3, stride=3), #  9 -> 3 * out_channels[2]
+            nn.Flatten(), # -> 3 * 3 * out_channels[2] (3 * 3 * 15 = 135)
+            nn.Linear(3 * 3 * self.out_channels[2], 128), 
             nn.ReLU(),
             nn.Dropout(self.p),
             nn.Linear(128, 32),
