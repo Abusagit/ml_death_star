@@ -18,7 +18,7 @@ def get_parser():
     parser.add_argument("--mode", choices=["distance", "energy"], default="energy")
     parser.add_argument("--radius", type=int, default=5)
     
-    parser.add_argument("-o", "--out", type=Path, default=Path.cwd())
+    parser.add_argument("-o", "--out", type=Path, default=None)
 
     return parser
 
@@ -115,7 +115,7 @@ def create_synthetic_chain(points, radius):
         
     # generating charges
     positive_charges = set(np.random.choice(list(range(points)), points // 2, replace=False))
-    charges = np.array([index in positive_charges for index in range(points)], dtype=int)
+    charges = np.array([1 if index in positive_charges else -1 for index in range(points)], dtype=int)
     
     coordinates = np.around(np.array(coordinates), decimals=4)
     
@@ -156,7 +156,10 @@ def main():
     
     
     radius = args.radius
-    outdir = args.out / f"chains_mode_{args.mode}_radius_{radius}_size_{args.number}" / "raw"
+    if args.out:
+        outdir = args.out
+    else:
+        outdir = Path().cwd() / f"chains_mode_{args.mode}_radius_{radius}_size_{args.number}"
     
     outdir.mkdir(parents=True, exist_ok=False)
     
