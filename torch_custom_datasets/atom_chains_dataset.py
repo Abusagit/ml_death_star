@@ -56,7 +56,19 @@ class ToTensor:
         
         return sample.view(1, *sample.shape)
     
+class Normalize: # Showed less performance while used
+    def __call__(self, sample):
+        
+        
+        new_min = -1
+        new_max = 1
+        for i in range(sample.shape[0]):
+            t_min, t_max = sample[i].min(), sample[i].max()
+            
+            sample[i] = (sample[i] - t_min)/(t_max - t_min)*(new_max - new_min) + new_min
+            
+        return sample
+            
     
 transform=transforms.Compose([ToTensor(),
-                              #Normalize(),
                               ])
