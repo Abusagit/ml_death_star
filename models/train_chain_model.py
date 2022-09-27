@@ -86,9 +86,12 @@ model, train_losses, test_losses = train_cnn(model=ChainCNN(input_dim=args.input
                                         num_of_epochs=args.epochs,
                                         train_loader=train_dl,
                                         test_loader=test_dl,
+                                        outdir=args.outdir,
+                                        save_weights=True,
+                                        epoch_interval=1,
                                         )
 
-torch.save(model.state_dict(), Path(args.outdir, "params.pkl"))
+torch.save(model.state_dict(), Path(args.outdir, "params_final.pkl"))
 
 with open(Path(args.outdir, "train.pkl"), "wb") as h:
     pickle.dump(train_losses, h, protocol=pickle.HIGHEST_PROTOCOL)

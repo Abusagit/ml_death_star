@@ -6,6 +6,7 @@ import logging
 import torch
 from torch_geometric.data import DataLoader as DataloaderGeometric
 from torch.utils.data import DataLoader, random_split
+from pathlib import Path
 
 from tqdm import tqdm
 
@@ -105,7 +106,7 @@ def train_geometric(model, optimizer, train_loader, test_loader, optimizer_param
             if epoch % epoch_interval == 0:
                 test_loss = test_geometric(test_loader, model, device=device)
                 test_losses.append(test_loss)
-                logger.info(f"Epoch {epoch} | Train loss: {train_loss:.4f} | Test loss : {test_loss:.4f}")
+                logger.info(f"Epoch {epoch}\t|\tTrain loss: {train_loss:.4f}\t|\tTest loss : {test_loss:.4f}")
                 
             
             epoch_loss = np.mean(epoch_losses)
@@ -134,12 +135,18 @@ def test_cnn(test_loader, model, device, is_validation=False):
     return np.mean(LOSS)
     
     
-def train_cnn(model, optimizer, train_loader, test_loader, optimizer_params, num_of_epochs=200, epoch_interval=10, log=sys.stdout):
+def train_cnn(model, optimizer, train_loader, test_loader, optimizer_params, outdir,
+              num_of_epochs=200, epoch_interval=10, save_weights=False, 
+              log=sys.stdout):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
     model.to(device)
     logger.info(f"Model on cuda: {next(model.parameters()).is_cuda}")
     optimizer = optimizer(model.parameters(), **optimizer_params)
+    
+    if save_weights:
+        weights_dir = Path(outdir, "weights")
+        weights_dir.mkdir(parents=True)
     
     train_losses = []
     test_losses = []
@@ -160,22 +167,25 @@ def train_cnn(model, optimizer, train_loader, test_loader, optimizer_params, num
                 
                 predictions = model(X)
                 
-                loss = model.loss(predictions, targets)
-                loss.backward()
-                optimizer.step()
-                loss.detach()
-                train_loss = loss.item()
-                epoch_losses.append(train_loss)
+                if epoch % epoch_interval == 0:
+                    loss = model.loss(predictions, targets)
+                    loss.backward()
+                    optimizer.step()
+                    loss.detach()
+                    train_loss = loss.item()
+                    epoch_losses.append(train_loss)
                 
-                logger.debug(f"Epoch {epoch} | batch {i} loss: {train_loss:.4f}")
+                logger.debug(f"Epoch {epoch}\t|\tbatch {i} loss: {train_loss:.4f}")
                 
                 del X, targets
                 torch.cuda.empty_cache()
-            if epoch % epoch_interval == 0:
-                test_loss = test_cnn(test_loader, model, device=device)
-                test_losses.append(test_loss)
-                logger.info(f"Epoch {epoch} | Train loss: {train_loss:.4f} | Test loss : {test_loss:.4f}")
-                
+                if save_weights:
+                    torch.save(model.state_dict(), weights_dir / f"weights_epoch_{epoch}.pkl")
+            
+            test_loss = test_cnn(test_loader, model, device=device)
+            test_losses.append(test_loss)
+            logger.info(f"Epoch {epoch}\t|\tTrain loss: {train_loss:.4f}\t|\tTest loss : {test_loss:.4f}")
+            
                 # pbar.write(f"Epoch {epoch} | Train loss: {train_loss:.4f} | Test loss : {test_loss:.4f}")
             
             epoch_loss = np.mean(epoch_losses)
