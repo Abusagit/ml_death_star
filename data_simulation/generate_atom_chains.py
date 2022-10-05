@@ -94,8 +94,9 @@ def generate_point_in_sphere_with_shift(origin, radius):
 
 def compute_charge_energy_between_two_points(xyz_1, xyz_2, charge_1, charge_2):
     distance_vector = xyz_1 - xyz_2
+    distance = np.sqrt(distance_vector @ distance_vector)
     #/////print(distance_vector)
-    return round(charge_1 * charge_2 / np.sqrt(distance_vector @ distance_vector), 4)
+    return round(charge_1 * charge_2 / distance, 4), distance
  
         
 def create_synthetic_chain(points, radius):
@@ -124,17 +125,22 @@ def create_synthetic_chain(points, radius):
 
 def parameterize_chain(coordinates, charges, mode):
     interatom_energies = np.zeros(shape=(coordinates.shape[0], coordinates.shape[0]))
+    distance_matrix = np.zeros(shape=(coordinates.shape[0], coordinates.shape[0]))
     
     for i, coord_i in enumerate(coordinates):
         for j_ in range(i+1, coordinates.shape[0]):
             j = j_
             coord_j = coordinates[j]
             
+            
 
-            charge_energy = compute_charge_energy_between_two_points(xyz_1=coord_i,
+            charge_energy, distance = compute_charge_energy_between_two_points(xyz_1=coord_i,
                                                                      xyz_2=coord_j,
                                                                      charge_1=charges[i],
                                                                      charge_2=charges[j])
+            
+            
+            distance_matrix[i, j] = distance_matrix[j, i] = distance
             interatom_energies[i, j] = interatom_energies[j, i] = charge_energy
             
     
@@ -144,9 +150,12 @@ def parameterize_chain(coordinates, charges, mode):
     
     if mode =="energy":
         return interatom_energies, potential_electrostatic_energy
+    if mode == "distance":
+        return distance_matrix, charges, potential_electrostatic_energy
+        
+        
     
-    distance_matrix = np.zeros(shape=(coordinates.shape[0], coordinates.shape[0]))
-    # TODO
+    raise argparse.ArgumentError(f"Given argument 'mode' values ('{mode}') is not supported by program")
     
     
     
@@ -165,17 +174,27 @@ def main():
     
     
     energies = []
-    for i in tqdm(range(1, args.number+1), desc="Parameterizing atom chains and saving to matrix_coordinates_files"):
+    for i in tqdm(range(args.number), desc=f"Parameterizing atom chains and saving to matrix_coordinates_files [mode: {args.mode}]"):
         
-        interatom_energies, total_energy = parameterize_chain(*create_synthetic_chain(points=args.points,
+        if args.mode == "energy":
+            interatom_energies, total_energy = parameterize_chain(*create_synthetic_chain(points=args.points,
                                                                                       radius=radius,
                                                                                       ),
-                                                              mode=args.mode)
+                                                                                        mode=args.mode)
+            with open(outdir / f"X_{i}.npy", "wb") as f:
+                np.save(f, interatom_energies)
         
+        else:
+            interatom_energies, charges, total_energy = parameterize_chain(*create_synthetic_chain(points=args.points,
+                                                                                      radius=radius,
+                                                                                      ),
+                                                                                        mode=args.mode)
+            
+            np.savez(f"X_{i}.npz", distances=interatom_energies, charges=charges)
+            
         energies.append(total_energy)
         
-        with open(outdir / f"X_{i}.npy", "wb") as f:
-            np.save(f, interatom_energies)
+
         
     
     with open(outdir / f"Y.npy", "wb") as f:
