@@ -9,7 +9,7 @@ import numpy as np
 
 class ChainCNN(nn.Module):
     def __init__(self, input_dim=100, in_channels=1, hidden_dim=32, out_channels=None, dropout=0.25) -> None:
-        self.out_channels = out_channels or [10, 10, 15]
+        self.out_channels = out_channels or [15, 30, 60]
         self.input_dim = input_dim
         self.in_channels = in_channels
         self.hidden_dim = hidden_dim

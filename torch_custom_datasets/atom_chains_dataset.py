@@ -43,6 +43,27 @@ class ChainDataset(Dataset):
         
         return sample, sample_y
 
+class ChainDatasetDistance(ChainDataset):
+    
+    def __init__(self, path, input_dim=100, transform=None):
+        super().__init__(path, input_dim, transform)
+        
+    def __getitem__(self, idx):
+        mol_path = self.data_paths[idx]
+        sample_y = self.y[0, idx]
+        
+        _data = np.load(mol_path)
+        
+        sample_distances = torch.tensor(_data["distances"], dtype=torch.float64).reshape(self.data_dim)
+        sample_charges = torch.tensor(_data["charges"], dtype=torch.float64).reshape(self.data_dim[0]) # can be erroneous FIX THIS!!!
+        
+        if self.transform:
+            sample_distances = self.transform(sample_distances)
+            sample_charges = self.transform(sample_charges)
+            
+        return (sample_distances, sample_charges), sample_y
+        
+        
 
 class ToTensor:
     """Convert ndarrays in sample to Tensors."""
@@ -56,7 +77,7 @@ class ToTensor:
         
         return sample.view(1, *sample.shape)
     
-class Normalize: # Showed less performance while used
+class Normalize: # Showed less performance in practise
     def __call__(self, sample):
         
         

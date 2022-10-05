@@ -194,3 +194,21 @@ def train_cnn(model, optimizer, train_loader, test_loader, optimizer_params, out
             
             
     return model, train_losses, test_losses
+
+def get_predictions(model, dataloader):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model.to(device)
+    model.eval()
+    
+    predictions_all = []
+    torch.cuda.empty_cache()
+    for (X, targets) in dataloader:
+        X = X.to(device).float()
+        targets = targets.to(device).float()
+        
+        predictions = model(X).to("cpu").detach().numpy()
+        
+        predictions_all.extend(predictions)
+        
+        torch.cuda.empty_cache()
+    return predictions_all

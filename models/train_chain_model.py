@@ -9,8 +9,9 @@ import sys
 import os
 
 from chain_atom_model import ChainCNN
-from ml_death_star.torch_utils import get_train_test_dataloaders, train_cnn
+from ml_death_star.torch_utils import get_train_test_dataloaders, train_cnn, get_predictions
 from ml_death_star.torch_custom_datasets.atom_chains_dataset import ChainDataset, transform
+from torch.utils.data import DataLoader
 
 from pathlib import Path
 
@@ -25,6 +26,7 @@ def get_parser():
     root.add_argument("--input_dim", type=int, default=100)
     root.add_argument("--epochs", default=200, type=int)
     root.add_argument("-o", "--outdir", default=os.getcwd())
+    root.add_argument("--weights", required=False, type=str, help="If provided launches prediction rather than training")
     
     return root
 
@@ -65,10 +67,7 @@ dataset = ChainDataset(path=args.dataroot,
                        input_dim=args.input_dim,
                        transform=transform)
 
-train_dl, test_dl = get_train_test_dataloaders(dataset, 
-                                               ratio=args.train_test_ratio,
-                                               batch_size=args.batch_size,
-                                            )
+
 
 logger.info(SUCCESS_MSG)
 
@@ -76,25 +75,41 @@ logger.info(SUCCESS_MSG)
 logger.info("Initialising model and starting training")
 logger.info(f"Cuda available: {torch.cuda.is_available()=}")
 
-optimizer = torch.optim.Adam
-optimizer_params = {"lr": 0.01}
-torch.cuda.empty_cache()
-model, train_losses, test_losses = train_cnn(model=ChainCNN(input_dim=args.input_dim, hidden_dim=args.hidden_dim),
-                                        optimizer=optimizer,
-                                        optimizer_params=optimizer_params,
-                                        log=open(os.devnull,"w"),
-                                        num_of_epochs=args.epochs,
-                                        train_loader=train_dl,
-                                        test_loader=test_dl,
-                                        outdir=args.outdir,
-                                        save_weights=True,
-                                        epoch_interval=1,
-                                        )
+model = ChainCNN(input_dim=args.input_dim, hidden_dim=args.hidden_dim)
+if not args.weights:
+    train_dl, test_dl = get_train_test_dataloaders(dataset, 
+                                               ratio=args.train_test_ratio,
+                                               batch_size=args.batch_size,
+                                            )
+    optimizer = torch.optim.Adam
+    optimizer_params = {"lr": 0.01}
+    torch.cuda.empty_cache()
+    model, train_losses, test_losses = train_cnn(model=model,
+                                            optimizer=optimizer,
+                                            optimizer_params=optimizer_params,
+                                            log=open(os.devnull,"w"),
+                                            num_of_epochs=args.epochs,
+                                            train_loader=train_dl,
+                                            test_loader=test_dl,
+                                            outdir=args.outdir,
+                                            save_weights=True,
+                                            epoch_interval=1,
+                                            )
 
-torch.save(model.state_dict(), Path(args.outdir, "params_final.pkl"))
+    torch.save(model.state_dict(), Path(args.outdir, "params_final.pkl"))
 
-with open(Path(args.outdir, "train.pkl"), "wb") as h:
-    pickle.dump(train_losses, h, protocol=pickle.HIGHEST_PROTOCOL)
+    with open(Path(args.outdir, "train.pkl"), "wb") as h:
+        pickle.dump(train_losses, h, protocol=pickle.HIGHEST_PROTOCOL)
+        
+    with open(Path(args.outdir, "test.pkl"), "wb") as h:
+        pickle.dump(test_losses, h, protocol=pickle.HIGHEST_PROTOCOL)
+else:
+    logger.info("Provided weights ==> performing predictions on samples")
+    model.load_state_dict(torch.load(args.weights))    
     
-with open(Path(args.outdir, "test.pkl"), "wb") as h:
-    pickle.dump(test_losses, h, protocol=pickle.HIGHEST_PROTOCOL)
+    dataloader = DataLoader(dataset=dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
+    
+    predictions = get_predictions(model=model, dataloader=dataloader)
+    
+    with open(Path(args.outdir, "predictions.pkl"), "wb") as h:
+        pickle.dump(predictions, h, protocol=pickle.HIGHEST_PROTOCOL)
